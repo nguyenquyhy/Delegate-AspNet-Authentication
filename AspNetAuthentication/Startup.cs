@@ -1,3 +1,6 @@
+using AspNetAuthentication.GraphQL;
+using HotChocolate;
+using HotChocolate.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +15,11 @@ namespace AspNetAuthentication
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+
+            services.AddGraphQL(
+                SchemaBuilder.New()
+                    .AddQueryType<Query>()
+                    .AddAuthorizeDirectiveType());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -23,6 +31,8 @@ namespace AspNetAuthentication
             }
 
             app.UseRouting();
+
+            app.UseGraphQL("/GraphQL");
 
             app.UseEndpoints(endpoints =>
             {
