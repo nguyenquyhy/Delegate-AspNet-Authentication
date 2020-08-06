@@ -2,11 +2,14 @@ using AspNetAuthentication.GraphQL;
 using HotChocolate;
 using HotChocolate.AspNetCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
@@ -36,6 +39,9 @@ namespace AspNetAuthentication
 
             services
                 .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                // NOTE: This is an enhanced version of AddJwtBearer that have some utility functions and defaults for Microsoft account.
+                // This parses ClaimsPrincipal from Bearer Authorization header.
+                .AddMicrosoftWebApi(config => { }, config => { Configuration.Bind("Authentication:Microsoft", config); })
                 // NOTE: cookie authentication and OIDC is used to handle authentication in web browser
                 .AddCookie(config =>
                 {
@@ -88,7 +94,17 @@ namespace AspNetAuthentication
                     });
                 });
 
-            services.AddAuthorization();
+            services.AddAuthorization(config =>
+            {
+                // NOTE: this is needed to change the default policy of all AuthorizeAttribute to use both JWT and Cookie for authentication scheme
+                var defaultAuthorizationPolicyBuilder = new AuthorizationPolicyBuilder(
+                    JwtBearerDefaults.AuthenticationScheme,
+                    CookieAuthenticationDefaults.AuthenticationScheme
+                );
+                defaultAuthorizationPolicyBuilder =
+                    defaultAuthorizationPolicyBuilder.RequireAuthenticatedUser();
+                config.DefaultPolicy = defaultAuthorizationPolicyBuilder.Build();
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
