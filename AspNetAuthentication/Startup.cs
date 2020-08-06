@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AspNetAuthentication
 {
@@ -116,6 +118,20 @@ namespace AspNetAuthentication
             }
 
             app.UseRouting();
+
+            // NOTE: Authorization middleware does not run policy if there is no Endpoint and no [Authorize] attribute,
+            // which creates a problem with the default policy to apply multiple authentication schemes.
+            // This middleware create an Endpoint with AuthorizeAttribute for /GraphQL.
+            // AllowAnonymousAttribute is also added since the actual authorization of GraphQL is done within HotChocolate itself.
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/GraphQL")))
+                {
+                    var endpoint = new Endpoint(context => Task.CompletedTask, new EndpointMetadataCollection(new AuthorizeAttribute(), new AllowAnonymousAttribute()), "GraphQL");
+                    context.SetEndpoint(endpoint);
+                }
+                await next();
+            });
 
             app.UseAuthentication();
             app.UseAuthorization();
