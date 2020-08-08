@@ -17,7 +17,7 @@ namespace AspNetAuthentication.WpfClient
     public partial class MainWindow : Window
     {
         private const string Authority = "https://login.microsoftonline.com/common/v2.0";
-
+        
         //============= TO FILL IN ===============//
         private const string ClientId = "";
         private static readonly string[] Scopes = { "[api://...API ID.../...scope name...]" };
@@ -55,6 +55,11 @@ namespace AspNetAuthentication.WpfClient
             await SignInAsync();
         }
 
+        private async void ButtonSignOut_Click(object sender, RoutedEventArgs e)
+        {
+            await SignOutAsync();
+        }
+
         private async Task InitializeCacheAsync()
         {
             // Building StorageCreationProperties
@@ -84,6 +89,7 @@ namespace AspNetAuthentication.WpfClient
                 await Dispatcher.Invoke(async () =>
                 {
                     ButtonSignIn.Visibility = Visibility.Collapsed;
+                    ButtonSignOut.Visibility = Visibility.Visible;
                     await CallRestAsync(result.AccessToken);
                     await CallGraphQlAsync(result.AccessToken);
                 });
@@ -103,6 +109,7 @@ namespace AspNetAuthentication.WpfClient
                     await Dispatcher.Invoke(async () =>
                     {
                         ButtonSignIn.Visibility = Visibility.Collapsed;
+                        ButtonSignOut.Visibility = Visibility.Visible;
                         await CallRestAsync(result.AccessToken);
                         await CallGraphQlAsync(result.AccessToken);
                     });
@@ -131,6 +138,16 @@ namespace AspNetAuthentication.WpfClient
                     });
                 }
             }
+        }
+
+        private async Task SignOutAsync()
+        {
+            var accounts = (await app.GetAccountsAsync()).ToList();
+
+            await app.RemoveAsync(accounts.FirstOrDefault());
+
+            ButtonSignIn.Visibility = Visibility.Visible;
+            ButtonSignOut.Visibility = Visibility.Collapsed;
         }
 
         private async Task CallRestAsync(string accessToken)

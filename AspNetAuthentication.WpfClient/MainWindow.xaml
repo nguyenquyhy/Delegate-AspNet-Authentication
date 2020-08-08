@@ -8,5 +8,6 @@
         Title="MainWindow" Height="450" Width="400">
     <StackPanel>
         <Button x:Name="ButtonSignIn" Content="Sign In" Click="ButtonSignIn_Click" />
+        <Button x:Name="ButtonSignOut" Content="Sign Out" Click="ButtonSignOut_Click" Visibility="Collapsed" />
     </StackPanel>
 </Window>
