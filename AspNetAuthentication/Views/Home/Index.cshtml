@@ -1,1 +1,15 @@
 ﻿Hello World!
+
+@if (User.Identity.IsAuthenticated)
+{
+    <div>
+        Welcome @User.Identity.Name
+        <a href="/Logout">Logout</a>
+    </div>
+}
+else
+{
+    <div>
+        <a href="/Login">Login</a>
+    </div>
+}
